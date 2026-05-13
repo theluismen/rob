@@ -18,24 +18,24 @@ def hanoi(mv, dsb, gr, n, origen, destino, auxiliar, torres, alturas):
     hanoi(mv, dsb, gr, n - 1, auxiliar, destino, origen, torres, alturas)
 
 
-def pick_and_place(mv, dsb, gr, torres, origen, destino, vel_fast=80, vel_slow=10):
+def pick_and_place(mv, dsb, gr, torres, origen, destino, alturas, vel_fast=80, vel_slow=10):
     """
     Realiza un ciclo de Pick and Place y finaliza en el punto de seguridad de destino.
     p_pick: Coordenadas reales de agarre [X, Y, Z, R, J, W]
     p_place: Coordenadas reales de entrega [X, Y, Z, R, J, W]
     """
-    techo  = 500.00
-    base   = 105.00
+    techo  = 250.00
+    base   = 102.00
     offset = 10.00
 
     p_pick     = torres[origen].copy()
-    p_pick[2]  = base + alturas[origen] * offset
+    p_pick[2]  = base + len(alturas[origen]) * offset
 
     p_place    = torres[destino].copy()
-    p_place[2] = base + alturas[destino] * offset
+    p_place[2] = base + (len(alturas[destino])+1) * offset
 
-    alturas[origen]  -= 1
-    alturas[destino] += 1
+    disco = alturas[origen].pop()
+    alturas[destino].append(disco)
 
     print(f"Iniciando ciclo: Yendo a recoger a {p_pick}")
 
@@ -102,19 +102,23 @@ if __name__ == '__main__':
     gr = Gripper(dsb, mv, ip)
 
     torres = {
-        "A": [-100,-364, 0.000000, 180.000000, 0.000000, 0.000000],
+        "A": [-120,-364, 0.000000, 180.000000, 0.000000, 0.000000],
         "B": [   0,-364, 0.000000, 180.000000, 0.000000, 0.000000],
-        "C": [ 100,-364, 0.000000, 180.000000, 0.000000, 0.000000]
+        "C": [ 120,-364, 0.000000, 180.000000, 0.000000, 0.000000]
     }
 
     alturas = {
-        "A": args.n,
-        "B": 1,
-        "C": 1
+        "A": [i for i in range(args.n,0,-1)], # Pila Discos Inicial
+        "B": [],
+        "C": []
     }
 
     mv.JointMovJ(0,0,0,0,0,0,60,50)
 
-    hanoi(mv, dsb, gr, n, "A", "C", "B", torres, alturas)
+    init_point = [0,-364, 205.000000, 180.000000, 0.000000, 0.000000]
+
+    mv.MovJ(init_point[0], init_point[1], init_point[2], init_point[3], init_point[4], init_point[5])
+
+    hanoi(mv, dsb, gr, args.n, "A", "C", "B", torres, alturas)
 
     mv.JointMovJ(0,0,0,0,0,0,60,50)
